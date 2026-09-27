@@ -23,7 +23,7 @@ product-manager/
 └── README.md
 ```
 
-## Cara Menjalankan (XAMPP / Laragon)
+## Cara Menjalankan (XAMPP)
 
 1. **Salin folder proyek** ke dalam folder web server, misalnya:
     XAMPP: `C:\xampp\htdocs\product-manager`
@@ -62,12 +62,12 @@ product-manager/
 
 ## Skenario Pengujian (Checklist Demo)
 
-- [x] Tambah produk dengan data valid → muncul di daftar.
-- [x] Nama produk < 3 karakter → ditolak dengan pesan error.
-- [x] Harga negatif / stok negatif → ditolak dengan pesan error.
-- [x] Refresh halaman setelah create berhasil → tidak terjadi duplikasi data (PRG).
-- [x] Nama produk berisi `<b>Promo</b>` → tampil sebagai teks, bukan tag HTML aktif.
-- [x] Tampilan di layar sempit → card membungkus rapi (flex-wrap).
+Tambah produk dengan data valid → muncul di daftar.
+Nama produk < 3 karakter → ditolak dengan pesan error.
+Harga negatif / stok negatif → ditolak dengan pesan error.
+Refresh halaman setelah create berhasil → tidak terjadi duplikasi data (PRG).
+Nama produk berisi `<b>Promo</b>` → tampil sebagai teks, bukan tag HTML aktif.
+Tampilan di layar sempit → card membungkus rapi (flex-wrap).
 
 ## Catatan
 
