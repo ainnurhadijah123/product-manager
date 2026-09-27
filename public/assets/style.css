@@ -1,0 +1,281 @@
+/* =========================================================
+   style.css - Product Manager
+   Menerapkan Box Model (box-sizing) dan Flexbox (grid produk)
+   ========================================================= */
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.container-narrow {
+    max-width: 560px;
+}
+
+/* ---------- Header ---------- */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.page-header h1 {
+    margin: 0;
+    font-size: 30px;
+    font: bold 30px Arial, Helvetica, sans-serif;
+}
+.navbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ---------- Alerts ---------- */
+
+.alert {
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.alert-success {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+}
+
+/* ---------- Search form ---------- */
+
+.search-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.search-form input[type="text"] {
+    flex: 1 1 240px;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* ---------- Products grid (Flexbox) ---------- */
+
+.products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+
+    gap: 16px;
+    align-items: stretch;
+   
+}
+
+.card {
+    flex: 1 1 220px;
+    max-width: 280px;
+    min-width:210px;
+    padding: 20px;
+    margin: 0;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-title {
+    margin: 0 0 4px;
+    font-size: 18px;
+}
+
+.card-category {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.card-price {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: bold;
+    color: #0f172a;
+}
+
+.card-stock {
+    margin: 0 0 16px;
+    font-size: 13px;
+    color: #475569;
+}
+
+.actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.actions form {
+    margin: 0;
+}
+
+.empty-state {
+    text-align: center;
+    color: #64748b;
+    padding: 48px 0;
+}
+
+/* ---------- Forms (create / edit) ---------- */
+
+.form-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 24px;
+}
+
+.form-card label {
+    font-size: 13px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.form-card input {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.field-error {
+    margin: 4px 0 0;
+    color: #dc2626;
+    font-size: 12px;
+}
+
+.form-card button {
+    margin-top: 20px;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+    display: inline-block;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.btn-danger {
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: #2563eb;
+    padding: 10px 4px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 480px) {
+    .card {
+        flex: 1 1 100%;
+        max-width: 100%;
+    }
+}
+
+.badge {
+    display: inline-block;
+    margin: 0 0 16px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-out {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.badge-low {
+    background: #fef9c3;
+    color: #92400e;
+}
+
+.card-out {
+    opacity: 0.7;
+    background: #f8fafc;
+}
+.badge {
+    display: inline-block;
+    margin: 0 0 16px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-out {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.badge-low {
+    background: #fef9c3;
+    color: #92400e;
+}
+.card-stock {
+    display: inline-block;
+    margin: 0 0 16px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: bold;
+    background: #bef4d2;
+    color:#0f172a;
+}
