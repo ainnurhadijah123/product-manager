@@ -1,81 +1,80 @@
 <?php
-/**
- * public/create.php
- * -----------------------------------------------------------
- * CREATE - Menampilkan form (GET) dan memproses penyimpanan (POST).
- * Alur: ambil input -> normalisasi -> validasi -> prepared statement
- *       -> redirect (PRG) supaya refresh tidak mengirim ulang data.
- */
-
 session_start();
 require __DIR__ . '/../config/db.php';
 require __DIR__ . '/../config/helpers.php';
 
-$errors = [];
+// Kunci halaman agar hanya bisa diakses jika sudah login
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
 
-// Nilai default untuk mengisi ulang form jika validasi gagal
-$old = ['name' => '', 'category' => '', 'price' => '', 'stock' => ''];
+$errors = [];
+$name = '';
+$category_input = '';
+$price = '';
+$stock = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $name = trim($_POST['name'] ?? '');
+    $category_input = trim($_POST['category'] ?? '');
+    $price = trim($_POST['price'] ?? '');
+    $stock = trim($_POST['stock'] ?? '');
 
-    // 1) Ambil input dengan nilai default
-    $name     = trim($_POST['name'] ?? '');
-    $category = trim($_POST['category'] ?? '');
-    $price    = filter_input(INPUT_POST, 'price', FILTER_VALIDATE_FLOAT);
-    $stock    = filter_input(INPUT_POST, 'stock', FILTER_VALIDATE_INT);
+    if (empty($name)) $errors['name'] = 'Nama produk wajib diisi.';
+    if (empty($category_input)) $errors['category'] = 'Kategori wajib diisi.';
+    if ($price === '') $errors['price'] = 'Harga wajib diisi.';
+    if ($stock === '') $errors['stock'] = 'Stok wajib diisi.';
 
-    // Simpan kembali untuk mengisi ulang form bila terjadi error
-    $old = [
-        'name'     => $name,
-        'category' => $category,
-        'price'    => $_POST['price'] ?? '',
-        'stock'    => $_POST['stock'] ?? '',
-    ];
-
-    // 2) Normalisasi sudah dilakukan lewat trim() di atas.
-    if ($category === '') {
-        $category = 'Umum'; // sama dengan default kolom di database
-    }
-
-    // 3) Validasi aturan bisnis
-    if (mb_strlen($name) < 3) {
-        $errors['name'] = 'Nama minimal 3 karakter.';
-    }
-    if ($price === false || $price <= 0) {
-        $errors['price'] = 'Harga harus lebih besar dari 0.';
-    }
-    if ($stock === false || $stock < 0) {
-        $errors['stock'] = 'Stok tidak boleh negatif.';
-    }
-
-    // Validasi nama unik (selain constraint UNIQUE di database)
-    if (empty($errors['name'])) {
-        $cek = $pdo->prepare('SELECT id FROM products WHERE name = :name');
-        $cek->execute(['name' => $name]);
-        if ($cek->fetch()) {
-            $errors['name'] = 'Nama produk sudah digunakan, gunakan nama lain.';
-        }
-    }
-
-    // 4) Jika lolos, jalankan proses database lalu redirect (PRG)
+    $imagePath = null;
     if (empty($errors)) {
+        // Logika Upload Gambar
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $tmpName = $_FILES['image']['tmp_name'];
+            $fileName = time() . '_' . preg_replace('/[^a-zA-Z0-9.\-_]/', '', $_FILES['image']['name']);
+            $uploadDir = __DIR__ . '/uploads/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            move_uploaded_file($tmpName, $uploadDir . $fileName);
+            $imagePath = $fileName;
+        }
+
         try {
+            // 1. CARI ATAU BUAT KATEGORI BARU
+            $stmt = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
+            $stmt->execute([$category_input]);
+            $category_id = $stmt->fetchColumn();
+
+            // Jika belum ada, tambahkan kategori baru tersebut ke tabel
+            if (!$category_id) {
+                $stmt = $pdo->prepare("INSERT INTO categories (name) VALUES (?)");
+                $stmt->execute([$category_input]);
+                $category_id = $pdo->lastInsertId();
+            }
+
+            // 2. GENERATE SKU OTOMATIS
+            $sku = 'PRD-' . strtoupper(substr(md5(uniqid()), 0, 6));
+
+            // 3. SIMPAN PRODUK KE DATABASE
             $stmt = $pdo->prepare(
-                'INSERT INTO products (name, category, price, stock)
-                 VALUES (:name, :category, :price, :stock)'
+                "INSERT INTO products (sku, name, category_id, price, stock, image) 
+                 VALUES (:sku, :name, :category_id, :price, :stock, :image)"
             );
             $stmt->execute([
-                'name'     => $name,
-                'category' => $category,
-                'price'    => $price,
-                'stock'    => $stock,
+                'sku' => $sku,
+                'name' => $name,
+                'category_id' => $category_id,
+                'price' => $price,
+                'stock' => $stock,
+                'image' => $imagePath
             ]);
 
+            // Jika sukses, kembali ke index
             header('Location: index.php?status=created');
-            exit; // WAJIB: hentikan eksekusi setelah redirect
-        } catch (PDOException $ex) {
-            // Jaga-jaga jika constraint UNIQUE database yang menangkap duplikat
-            $errors['name'] = 'Nama produk sudah digunakan, gunakan nama lain.';
+            exit;
+        } catch (PDOException $e) {
+            $errors['database'] = "ERROR DATABASE: " . $e->getMessage();
         }
     }
 }
@@ -83,55 +82,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tambah Produk - Product Manager</title>
-<link rel="stylesheet" href="assets/style.css">
+    <meta charset="UTF-8">
+    <title>Tambah Produk - Product Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
-<div class="container container-narrow">
+    <div class="container container-narrow">
+        <header class="page-header">
+            <h1>Tambah Produk</h1>
+            <a class="btn btn-ghost" href="index.php">&larr; Kembali</a>
+        </header>
 
-    <header class="page-header">
-        <h1>Tambah Produk</h1>
-        <a class="btn btn-ghost" href="index.php">&larr; Kembali</a>
-    </header>
+        <?php if (!empty($errors) && !isset($errors['database'])): ?>
+            <div class="alert alert-error">
+                Periksa kembali input Anda, terdapat kesalahan pada form.
+            </div>
+        <?php endif; ?>
 
-    <?php if (!empty($errors)): ?>
-        <div class="alert alert-error">
-            Periksa kembali input Anda, terdapat kesalahan pada form.
+        <div class="form-card">
+            <form method="POST" action="create.php" enctype="multipart/form-data">
+                
+                <?php if (isset($errors['database'])): ?>
+                    <div class="alert alert-error"><?= htmlspecialchars($errors['database']) ?></div>
+                <?php endif; ?>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="name" style="display: block; margin-bottom: 5px; font-weight: 500;">Nama produk</label>
+                    <input type="text" id="name" name="name" value="<?= htmlspecialchars($name) ?>" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label for="category" style="display: block; margin-bottom: 5px; font-weight: 500;">Kategori</label>
+                    <input type="text" id="category" name="category" value="<?= htmlspecialchars($category_input) ?>" required placeholder="Contoh: Peralatan Minum" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="price" style="display: block; margin-bottom: 5px; font-weight: 500;">Harga</label>
+                    <input type="number" id="price" name="price" value="<?= htmlspecialchars($price) ?>" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label for="stock" style="display: block; margin-bottom: 5px; font-weight: 500;">Stok</label>
+                    <input type="number" id="stock" name="stock" value="<?= htmlspecialchars($stock) ?>" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box;">
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <label for="image" style="display: block; margin-bottom: 5px; font-weight: 500;">Gambar Produk (Opsional - Maks 2MB)</label>
+                    <input type="file" id="image" name="image" accept="image/*" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; background-color: #fff;">
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;">Simpan produk</button>
+            </form>
         </div>
-    <?php endif; ?>
-
-    <form class="form-card" method="POST" action="create.php" novalidate>
-
-        <label for="name">Nama produk</label>
-        <input id="name" name="name" minlength="3" required
-               value="<?= e($old['name']) ?>">
-        <?php if (!empty($errors['name'])): ?>
-            <p class="field-error"><?= e($errors['name']) ?></p>
-        <?php endif; ?>
-
-        <label for="category">Kategori</label>
-        <input id="category" name="category" placeholder="Umum"
-               value="<?= e($old['category']) ?>">
-
-        <label for="price">Harga</label>
-        <input id="price" name="price" type="number" min="1" step="0.01" required
-               value="<?= e((string) $old['price']) ?>">
-        <?php if (!empty($errors['price'])): ?>
-            <p class="field-error"><?= e($errors['price']) ?></p>
-        <?php endif; ?>
-
-        <label for="stock">Stok</label>
-        <input id="stock" name="stock" type="number" min="0" required
-               value="<?= e((string) $old['stock']) ?>">
-        <?php if (!empty($errors['stock'])): ?>
-            <p class="field-error"><?= e($errors['stock']) ?></p>
-        <?php endif; ?>
-
-        <button type="submit" class="btn btn-primary">Simpan produk</button>
-    </form>
-
-</div>
+    </div>
 </body>
 </html>
