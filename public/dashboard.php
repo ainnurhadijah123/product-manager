@@ -58,6 +58,64 @@ $recent_transactions = $stmt->fetchAll();
             width: 100%; 
             box-sizing: border-box;
         }
+        
+        /* === TAMBAHAN CSS DROPDOWN === */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropbtn {
+            background-color: transparent;
+            color: #374151;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+        }
+        .dropbtn:hover {
+            background-color: #f3f4f6;
+        }
+        .dropdown-content {
+            display: none; 
+            position: absolute;
+            right: 0; 
+            top: 100%;
+            background-color: #ffffff;
+            min-width: 180px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            z-index: 10;
+            overflow: hidden;
+            /* margin-top sudah dihilangkan agar menu menempel dan tidak lari-lari */
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown-content a {
+            color: #374151;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            width: 100%;
+            text-align: left;
+            font-size: 14px;
+            font-weight: 500;
+            box-sizing: border-box;
+            transition: background-color 0.2s;
+            font-family: 'Poppins', sans-serif;
+        }
+        .dropdown-content a:hover {
+            background-color: #f9fafb;
+        }
+        .text-green { color: #059669 !important; }
+        .text-red { color: #dc2626 !important; }
     </style>
 </head>
 <body style="background-color: #f3f4f6; margin: 0; padding: 20px;">
@@ -69,10 +127,17 @@ $recent_transactions = $stmt->fetchAll();
         <a href="index.php" style="font-family: 'Poppins', sans-serif; font-size: 16px; text-decoration: none; color: #6b7280; font-weight: 500;">Daftar Produk</a>
         <a href="transaction.php" style="font-family: 'Poppins', sans-serif; font-size: 16px; text-decoration: none; color: #6b7280; font-weight: 500;">Transaksi Barang</a>
     </div>
-    <div style="font-family: 'Poppins', sans-serif; font-size: 14px; color: #374151;">
-        Halo, <b><?= htmlspecialchars($_SESSION['name']) ?></b> | 
-        <a href="change_password.php" style="color: #059669; text-decoration: none; font-weight: 600; margin-left: 5px; margin-right: 5px;">Ganti Password</a> |
-        <a href="logout.php" style="color: #dc2626; text-decoration: none; font-weight: 600; margin-left: 5px;">Logout</a>
+    
+    <!-- === MENU DROPDOWN PROFILE (Diperbarui di sini) === -->
+    <div class="dropdown">
+        <button class="dropbtn">
+            <span>Halo, <b><?= htmlspecialchars($_SESSION['name'] ?? 'Pengguna') ?></b></span>
+            <span style="font-size: 10px;">▼</span>
+        </button>
+        <div class="dropdown-content">
+            <a href="change_password.php" class="text-green">Ganti Password</a>
+            <a href="logout.php" class="text-red" onclick="return confirm('Apakah Anda yakin ingin logout?');">Logout</a>
+        </div>
     </div>
 </div>
 
